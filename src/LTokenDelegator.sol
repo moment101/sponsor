@@ -6,17 +6,25 @@ import "./LTokenStorage.sol";
 
 contract LTokenDelegator is LTokenStorage, LTokenInterface {
     constructor(
-        address _implementation,
+        address implementation_,
         string memory name_,
-        string memory symbol_
+        string memory symbol_,
+        address sponsoredAddr_,
+        string memory sponseredName_,
+        string memory sponseredURI_
     ) {
         admin = msg.sender;
-        implementation = _implementation;
-        name = name_;
-        symbol = symbol_;
+        implementation = implementation_;
 
         delegateToImplementation(
-            abi.encodeWithSignature("initialize(string,string)", name, symbol)
+            abi.encodeWithSignature(
+                "initialize(string,string,address,string,string)",
+                name_,
+                symbol_,
+                sponsoredAddr_,
+                sponseredName_,
+                sponseredURI_
+            )
         );
     }
 

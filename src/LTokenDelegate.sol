@@ -5,10 +5,19 @@ import "./LTokenInterface.sol";
 import "./LTokenStorage.sol";
 
 contract LTokenDelegate is LTokenStorage, LTokenInterface {
-    function initialize(string memory name_, string memory symbol_) public {
-        require(msg.sender == admin, "Only admin may initialize the project");
+    function initialize(
+        string memory name_,
+        string memory symbol_,
+        address sponsoredAddr_,
+        string memory sponseredName_,
+        string memory sponseredURI_
+    ) public {
+        require(msg.sender == admin, "Only admin could initialize the project");
         name = name_;
         symbol = symbol_;
+        sponsoredAddr = sponsoredAddr_;
+        sponseredName = sponseredName_;
+        sponseredURI = sponseredURI_;
         console.log("LTokenDelegate initialize");
     }
 
