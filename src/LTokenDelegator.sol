@@ -103,6 +103,20 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
         return abi.decode(data, (uint256));
     }
 
+    function supplyBalance() external returns (uint256) {
+        bytes memory data = delegateToImplementation(
+            abi.encodeWithSignature("supplyBalance()")
+        );
+        return abi.decode(data, (uint256));
+    }
+
+    function withdrawAllFundBack() external returns (bool) {
+        bytes memory data = delegateToImplementation(
+            abi.encodeWithSignature("withdrawAllFundBack()")
+        );
+        return abi.decode(data, (bool));
+    }
+
     /**
      * @notice Internal method to delegate execution to another contract
      * @dev It returns to the external caller whatever the implementation returns or forwards reverts

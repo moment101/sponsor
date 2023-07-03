@@ -5,10 +5,24 @@ import "forge-std/Test.sol";
 import {Factory} from "../src/Factory.sol";
 import {LTokenDelegate} from "../src/LTokenDelegate.sol";
 import {LTokenDelegator} from "../src/LTokenDelegator.sol";
+import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
+import {IWETH} from "../src/Interfaces/IWETH.sol";
+import {IPool} from "../src/Interfaces/IPool.sol";
 
 contract LTokenDelegateTest is Test {
-    address public user1 = address(0x01);
-    address public user2 = address(0x02);
+    uint256 mainnetFork;
+    uint256 blockNumber = 17_506_081; // 100000 block before
+    string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
+
+    address public constant WETHADDR =
+        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant WETHPOOLADDR =
+        0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
+    address public constant AWETHADDR =
+        0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
+
+    address public user1 = address(0x0167656);
+    address public user2 = address(0x02938029);
     address public sponsorAddr = address(0xcafe);
 
     Factory public factory;
@@ -22,6 +36,10 @@ contract LTokenDelegateTest is Test {
     );
 
     function setUp() public {
+        mainnetFork = vm.createFork(MAINNET_RPC_URL);
+        vm.selectFork(mainnetFork);
+        vm.rollFork(blockNumber);
+
         factory = new Factory();
 
         address tokenDelegatorAddr = factory.createProject(
@@ -80,15 +98,64 @@ contract LTokenDelegateTest is Test {
 
     function test_mint_redeem() public {
         vm.startPrank(user1);
-        tokenDelegator.mint{value: 1 ether}();
-        assertEq(tokenDelegator.balanceOf(user1), 1 ether);
+        summary("Before mint");
+        tokenDelegator.mint{value: 10 ether}();
+        assertEq(tokenDelegator.balanceOf(user1), 10 ether);
+        summary("After mint");
 
-        uint redeemAmount = tokenDelegator.redeem(0.5 ether);
-        assertEq(redeemAmount, 0.5 ether);
+        vm.warp(block.timestamp + 60 * 60 * 24 * 365);
+        summary("After one year");
 
-        tokenDelegator.transfer(user2, 0.1 ether);
-        assertEq(tokenDelegator.balanceOf(user2), 0.1 ether);
+        tokenDelegator.transfer(user2, 5 ether);
+        summary("Transfer to user2 5 Ltoken");
+
+        uint redeemAmount = tokenDelegator.redeem(5 ether);
+        assertEq(redeemAmount, 5 ether);
+        summary("After redeem");
 
         vm.stopPrank();
+
+        vm.startPrank(user2);
+        tokenDelegator.redeem(5 ether);
+        summary("User2 redeem 5 Ltoken");
+        vm.stopPrank();
     }
+
+    function summary(string memory description) public {
+        console.log(description);
+        console.log("User1 ETH balance:", user1.balance);
+        console.log("User1 LToken balance:", tokenDelegator.balanceOf(user1));
+        console.log("User1 WETH balance", IWETH(WETHADDR).balanceOf(user1));
+        console.log("User2 ETH balance:", user2.balance);
+        console.log("User2 LToken balance:", tokenDelegator.balanceOf(user2));
+        console.log("User2 WETH balance", IWETH(WETHADDR).balanceOf(user2));
+
+        console.log(
+            "Delegator WETH balance",
+            IWETH(WETHADDR).balanceOf(address(tokenDelegator))
+        );
+        console.log(
+            "Delegate WETH balance",
+            IWETH(WETHADDR).balanceOf(tokenDelegator.implementation())
+        );
+        console.log(
+            "Delegator aWETH balance",
+            IWETH(AWETHADDR).balanceOf(address(tokenDelegator))
+        );
+        console.log(
+            "Delegate aWETH balance",
+            IWETH(AWETHADDR).balanceOf(tokenDelegator.implementation())
+        );
+
+        console.log("------------------------------------");
+    }
+
+    // function test_approve() public {
+    //     vm.startPrank(user1);
+    //     tokenDelegator.mint{value: 5 ether}();
+    //     tokenDelegator.approve(user2, 2 ether);
+    //     vm.stopPrank();
+
+    //     assertEq(tokenDelegator.allowance(user1, user2), 2 ether);
+    // }
 }

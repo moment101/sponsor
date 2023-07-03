@@ -9,14 +9,14 @@ interface LTokenInterface {
      * @dev Should increase mintor's profit balance
      */
 
-    function giveBack() external returns (uint);
-
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(
         address indexed owner,
         address indexed spender,
         uint256 value
     );
+
+    // User interface
 
     function balanceOf(address account) external view returns (uint256);
 
@@ -38,4 +38,14 @@ interface LTokenInterface {
     function mint() external payable returns (uint256);
 
     function redeem(uint256 amount) external returns (uint256);
+
+    function supplyBalance() external returns (uint256);
+
+    // Admin
+
+    function withdrawAllFundBack() external returns (bool);
+
+    // Sponsored interface
+
+    function giveBack() external returns (uint);
 }

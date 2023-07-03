@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "./ControllerInterface.sol";
 import "forge-std/Test.sol";
 
 contract ERC20Storage {
@@ -39,11 +38,6 @@ contract LTokenStorage is ERC20Storage {
     string public sponseredURI;
 
     /**
-     * @notice Contract all the LToken's operations
-     */
-    ControllerInterface _controller;
-
-    /**
      * @notice the total interest amount transferd to sponsored
      */
     uint256 public totalSponsorshipAmount;
@@ -62,4 +56,26 @@ contract LTokenStorage is ERC20Storage {
      * @notice the amount of give back from sponsored, wait for giver to claim
      */
     mapping(address => uint256) public waitForGiverClaimAmount;
+
+    // Investment
+
+    uint256 public reservedPercent = 2e17;
+
+    /**
+     * @notice the address of WETH
+     */
+    address public constant WETHADDR =
+        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+    /**
+     * @notice the address of WETH POOL over AVVe landing platform
+     */
+    address public constant WETHPOOLADDR =
+        0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
+
+    /**
+     * @notice the address of aWETH token over AVVe landing platform
+     */
+    address public constant AWETHADDR =
+        0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
 }
