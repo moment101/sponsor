@@ -78,4 +78,19 @@ contract LTokenStorage is ERC20Storage {
      */
     address public constant AWETHADDR =
         0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
+
+    /**
+     * @notice the block index for calculate sponsor share
+     */
+    mapping(address => uint) public sponsorCurrentBlockIndex;
+
+    /**
+     * @notice the addresses of all sponsors
+     */
+    address[] public sponsors;
+
+    /**
+     * @notice the accmulation of share, need to update when mint / redeem / transfer / giveback
+     */
+    mapping(address => uint) public sponsorAccumulationShare;
 }

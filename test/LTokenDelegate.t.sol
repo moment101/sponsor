@@ -193,6 +193,29 @@ contract LTokenDelegateTest is Test {
         summary("Admin withdraw all supply from AAve");
     }
 
+    function test_one_User_share_calculate() public {
+        vm.startPrank(user1);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 0);
+        tokenDelegator.mint{value: 5}();
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 0);
+        vm.warp(block.timestamp + 10);
+        tokenDelegator.mint{value: 3}();
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 50);
+        vm.warp(block.timestamp + 20);
+        tokenDelegator.redeem(5);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 210);
+        vm.warp(block.timestamp + 30);
+        tokenDelegator.redeem(3);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 300);
+        vm.warp(block.timestamp + 100);
+        tokenDelegator.mint{value: 10}();
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 300);
+        vm.warp(block.timestamp + 10);
+        tokenDelegator.mint{value: 1}();
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 400);
+        vm.stopPrank();
+    }
+
     function summary(string memory description) public view {
         console.log(description);
         console.log("User1 ETH balance:", user1.balance);
@@ -229,5 +252,18 @@ contract LTokenDelegateTest is Test {
         );
 
         console.log("------------------------------------");
+    }
+
+    function summaryShare(string memory description) public view {
+        console.log(description);
+
+        console.log(
+            "User1 share accumulation:",
+            tokenDelegator.sponsorAccumulationShare(user1)
+        );
+        console.log(
+            "User2 share accumulation:",
+            tokenDelegator.sponsorAccumulationShare(user2)
+        );
     }
 }

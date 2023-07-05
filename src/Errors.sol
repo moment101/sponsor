@@ -19,4 +19,5 @@ library Errors {
     string public constant CALLER_NOT_SPONSORED = "15"; // Only sponsored can claim for interest
     string public constant ZERO_AAVE_SUPPLY = "16"; // No one sponsor this project right now
     string public constant NO_INTEREST = "17"; // Interest has not accrued.
+    string public constant REDEEM_ZERO_AMOUNT = "18"; // User redeem 0 LToken
 }

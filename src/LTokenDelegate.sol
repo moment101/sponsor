@@ -34,6 +34,8 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
 
         uint256 fromBalance = _balances[from];
         require(fromBalance >= amount, Errors.TRANSFER_AMOUNT_EXCEEDS_BALANCE);
+        _updateSponsorShare(from);
+        _updateSponsorShare(to);
         unchecked {
             _balances[from] = fromBalance - amount;
             _balances[to] += amount;
@@ -94,6 +96,7 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
 
     function mint() external payable returns (uint256) {
         require(msg.value > 0, Errors.MINT_ZERO_AMOUNT);
+        _updateSponsorShare(msg.sender);
         _balances[msg.sender] += msg.value;
         totalSupply += msg.value;
         require(_supply(msg.value), Errors.SUPPLY_TO_AVVE_FAIL);
@@ -101,7 +104,9 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
     }
 
     function redeem(uint256 amount) external returns (uint256) {
+        require(amount > 0, Errors.REDEEM_ZERO_AMOUNT);
         require(_balances[msg.sender] >= amount, Errors.BALANCE_INSUFFICIENT);
+        _updateSponsorShare(msg.sender);
         _balances[msg.sender] -= amount;
         totalSupply -= amount;
         require(_withdraw(amount), Errors.WITHDRAW_FROM_AVVE_FAIL);
@@ -161,6 +166,22 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         require(success, Errors.SEND_ETH_BACK_TO_USER_FAIL);
         totalSponsorshipAmount += interest;
         return interest;
+    }
+
+    function _updateSponsorShare(address sponsor) internal {
+        uint previousBlockIndex = sponsorCurrentBlockIndex[sponsor];
+        uint currentBlockIndex = block.timestamp;
+        uint priviousBalance = _balances[sponsor];
+        if (previousBlockIndex == 0) {
+            sponsors.push(sponsor);
+            sponsorCurrentBlockIndex[sponsor] = currentBlockIndex;
+        } else {
+            if (previousBlockIndex < currentBlockIndex) {
+                uint delta = currentBlockIndex - previousBlockIndex;
+                sponsorAccumulationShare[sponsor] += (delta * priviousBalance);
+                sponsorCurrentBlockIndex[sponsor] = currentBlockIndex;
+            }
+        }
     }
 
     receive() external payable {}
