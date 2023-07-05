@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "forge-std/Test.sol";
+import {Errors} from "./Errors.sol";
 import {LTokenDelegate} from "./LTokenDelegate.sol";
 import {LTokenDelegator} from "./LTokenDelegator.sol";
 
@@ -51,8 +53,24 @@ contract Factory {
     }
 
     function setProjectStatus(address addr_, bool status_) external {
-        require(msg.sender == admin, "Only admin can modify project status");
+        require(msg.sender == admin, Errors.CHANGE_STATUS_NOT_ADMIN);
         projectStatus[addr_] = status_;
         emit ProjectStatusChanged(addr_, status_);
+    }
+
+    function upProjectImplement(
+        address delegatorAddr,
+        address newImplement
+    ) external {
+        require(msg.sender == admin, Errors.UPGRADE_IMPLEMENT_NOT_ADMIN);
+        console.log("factory upgrade");
+        LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
+        delegator.upgrade(newImplement);
+    }
+
+    function withdrawAllSupply(address delegatorAddr) external {
+        require(msg.sender == admin, Errors.CALLER_NOT_ADMIN);
+        LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
+        delegator.withdrawAllFundBack();
     }
 }

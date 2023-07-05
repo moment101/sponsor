@@ -41,11 +41,22 @@ interface LTokenInterface {
 
     function supplyBalance() external returns (uint256);
 
-    // Admin
+    /**
+     * @notice Admin can withdraw all supply of AAVe back to pool (emergency situations)
+     * @dev Need implement send all ETH back to sponsor
+     */
 
     function withdrawAllFundBack() external returns (bool);
 
-    // Sponsored interface
+    /**
+     * @notice Sponsored can give money back to sponsor
+     * @dev Calculate the share of sponsor
+     */
+    function giveback(uint amount) external returns (uint);
 
-    function giveBack() external returns (uint);
+    /**
+     * @notice Sponsored can claim the interest by AAve
+     * @dev withdraw aToken = supplyBalance - totalSupply
+     */
+    function claimInterest() external returns (uint);
 }

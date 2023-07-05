@@ -10,14 +10,14 @@
 1.  Factory 部署建立新的贊助專案合約，任何人都可以上架，需要提供被贊助者的一些資訊(address, url...),
     加入的專案在這份合約中可以查詢，與管理，方便前端串接
 2.  LToken Proxy / LToken Implementation， 贊助者的互動合約，可以在這裡 Mint / Redeem，
-3.  Controller 負責將資金拿去做投資與贖回，將收益轉給被贊助者。
+    負責將資金拿去做投資與贖回，將收益轉給被贊助者。
 
                        -------------------------------
                        | LToken1  <=> LTokenDelegate   |
          Factory ----> | LToken2 <=> LTokenDelegate    |
                        | ....... ....                  |
                        |-------------------------------|
-                                   Controller  <========================> Compound / AAVE
+                       |         Supply & Withdraw     |  <=============> AAVE (aWETH)
 
 # Development
 

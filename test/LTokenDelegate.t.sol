@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import {Factory} from "../src/Factory.sol";
 import {LTokenDelegate} from "../src/LTokenDelegate.sol";
+import {LTokenDelegateV2} from "../src/LTokenDelegateV2.sol";
 import {LTokenDelegator} from "../src/LTokenDelegator.sol";
 import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
 import {IWETH} from "../src/Interfaces/IWETH.sol";
@@ -82,6 +83,23 @@ contract LTokenDelegateTest is Test {
         assertEq(delegator.sponseredName(), "Vitalik Buterin");
     }
 
+    function test_Upgrade() public {
+        LTokenDelegateV2 v2 = new LTokenDelegateV2();
+        factory.upProjectImplement(address(tokenDelegator), address(v2));
+
+        vm.startPrank(user1);
+        (, bytes memory data) = address(payable(tokenDelegator)).call(
+            abi.encodeWithSignature("v2()")
+        );
+        assertEq(abi.decode(data, (string)), "v2");
+
+        LTokenDelegateV2 v3 = new LTokenDelegateV2();
+        vm.expectRevert(); // Only admin can upgrade implement contract
+        factory.upProjectImplement(address(tokenDelegator), address(v3));
+
+        vm.stopPrank();
+    }
+
     function test_AdminModifyProject() public {
         assertEq(factory.isProjectOpen(address(tokenDelegator)), true);
 
@@ -121,7 +139,61 @@ contract LTokenDelegateTest is Test {
         vm.stopPrank();
     }
 
-    function summary(string memory description) public {
+    function test_approve() public {
+        vm.startPrank(user1);
+        tokenDelegator.mint{value: 5 ether}();
+        tokenDelegator.approve(user2, 2 ether);
+        assertEq(tokenDelegator.allowance(user1, user2), 2 ether);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        tokenDelegator.transferFrom(user1, user2, 2 ether);
+        assertEq(tokenDelegator.allowance(user1, user2), 0);
+        assertEq(tokenDelegator.balanceOf(user2), 2 ether);
+        vm.stopPrank();
+    }
+
+    function test_claim_Interest() public {
+        vm.startPrank(user1);
+        summary("Before mint");
+        tokenDelegator.mint{value: 10 ether}();
+        assertEq(tokenDelegator.balanceOf(user1), 10 ether);
+        summary("After mint");
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 60 * 60 * 24 * 365);
+        summary("After one year");
+
+        vm.startPrank(sponsorAddr);
+        tokenDelegator.claimInterest();
+        vm.stopPrank();
+        summary("After sponsored claim interest");
+
+        vm.startPrank(user1);
+        tokenDelegator.redeem(10 ether);
+        summary("After User1 redeem all LToken");
+        vm.stopPrank();
+    }
+
+    function test_admin_withdraw() public {
+        vm.startPrank(user1);
+        summary("Before mint");
+        tokenDelegator.mint{value: 10 ether}();
+        assertEq(tokenDelegator.balanceOf(user1), 10 ether);
+        summary("After mint");
+
+        vm.warp(block.timestamp + 60 * 60 * 24 * 365);
+        summary("After one year");
+
+        vm.expectRevert();
+        factory.withdrawAllSupply(address(tokenDelegator));
+        vm.stopPrank();
+
+        factory.withdrawAllSupply(address(tokenDelegator));
+        summary("Admin withdraw all supply from AAve");
+    }
+
+    function summary(string memory description) public view {
         console.log(description);
         console.log("User1 ETH balance:", user1.balance);
         console.log("User1 LToken balance:", tokenDelegator.balanceOf(user1));
@@ -129,6 +201,15 @@ contract LTokenDelegateTest is Test {
         console.log("User2 ETH balance:", user2.balance);
         console.log("User2 LToken balance:", tokenDelegator.balanceOf(user2));
         console.log("User2 WETH balance", IWETH(WETHADDR).balanceOf(user2));
+        console.log("Sponsered ETH balance:", sponsorAddr.balance);
+        console.log(
+            "Sponsered LToken balance:",
+            tokenDelegator.balanceOf(sponsorAddr)
+        );
+        console.log(
+            "Sponsered WETH balance",
+            IWETH(WETHADDR).balanceOf(sponsorAddr)
+        );
 
         console.log(
             "Delegator WETH balance",
@@ -149,13 +230,4 @@ contract LTokenDelegateTest is Test {
 
         console.log("------------------------------------");
     }
-
-    // function test_approve() public {
-    //     vm.startPrank(user1);
-    //     tokenDelegator.mint{value: 5 ether}();
-    //     tokenDelegator.approve(user2, 2 ether);
-    //     vm.stopPrank();
-
-    //     assertEq(tokenDelegator.allowance(user1, user2), 2 ether);
-    // }
 }

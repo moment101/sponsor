@@ -30,14 +30,13 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
 
     function upgrade(address newImplementation) external {
         if (msg.sender != admin) revert();
+        console.log("delegator upgrade");
         implementation = newImplementation;
     }
 
     function decimals() public pure returns (uint8) {
         return 18;
     }
-
-    function giveBack() external override returns (uint) {}
 
     receive() external payable {}
 
@@ -103,8 +102,22 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
         return abi.decode(data, (uint256));
     }
 
-    function supplyBalance() external returns (uint256) {
+    function claimInterest() external returns (uint) {
         bytes memory data = delegateToImplementation(
+            abi.encodeWithSignature("claimInterest()")
+        );
+        return abi.decode(data, (uint256));
+    }
+
+    function giveback(uint amount) external returns (uint) {
+        bytes memory data = delegateToImplementation(
+            abi.encodeWithSignature("giveback(uint256)", amount)
+        );
+        return abi.decode(data, (uint256));
+    }
+
+    function supplyBalance() external view returns (uint256) {
+        bytes memory data = delegateToViewImplementation(
             abi.encodeWithSignature("supplyBalance()")
         );
         return abi.decode(data, (uint256));
@@ -176,11 +189,8 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
      */
     fallback() external payable {
         require(msg.sender != admin, "Transparant Proxy Only");
-        require(
-            msg.value == 0,
-            "CErc20Delegator:fallback: cannot send value to fallback"
-        );
-
+        require(msg.value == 0, "Fallback: cannot send value to fallback");
+        console.log("delegator fallback called");
         // delegate all other functions to current implementation
         (bool success, ) = implementation.delegatecall(msg.data);
 
