@@ -11,9 +11,9 @@ import {IWETH} from "../src/Interfaces/IWETH.sol";
 import {IPool} from "../src/Interfaces/IPool.sol";
 
 contract LTokenDelegateTest is Test {
-    uint256 mainnetFork;
-    uint256 blockNumber = 17_506_081; // 100000 block before
-    string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
+    uint256 public mainnetFork;
+    uint256 public blockNumber = 17_506_081; // 100000 block before
+    string public MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
 
     address public constant WETHADDR =
         0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
@@ -22,9 +22,10 @@ contract LTokenDelegateTest is Test {
     address public constant AWETHADDR =
         0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
 
-    address public user1 = address(0x0167656);
-    address public user2 = address(0x02938029);
-    address public sponsorAddr = address(0xcafe);
+    address public user1 = makeAddr("User1");
+    address public user2 = makeAddr("User2");
+    address public user3 = makeAddr("User3");
+    address public sponsorAddr = makeAddr("Sponsored");
 
     Factory public factory;
     LTokenDelegator public tokenDelegator;
@@ -54,11 +55,12 @@ contract LTokenDelegateTest is Test {
         tokenDelegator = LTokenDelegator(payable(tokenDelegatorAddr));
 
         vm.deal(user1, 10 ether);
-        vm.label(user1, "User1");
-        vm.label(user2, "User2");
+        vm.deal(user2, 10 ether);
+        vm.deal(user3, 10 ether);
+        vm.deal(sponsorAddr, 10 ether);
     }
 
-    function testCreateProject() public {
+    function test_createProject() public {
         assertEq(tokenDelegator.name(), "JonSmith Token");
         assertEq(tokenDelegator.symbol(), "JST");
         assertEq(tokenDelegator.sponsoredAddr(), sponsorAddr);
@@ -66,7 +68,7 @@ contract LTokenDelegateTest is Test {
         assertEq(tokenDelegator.sponseredURI(), "https://www.js.org");
     }
 
-    function testCreateAnotherProject() public {
+    function test_createAnotherProject() public {
         vm.expectEmit(false, false, false, false);
         emit ProjectCreated(address(this), address(1000));
         address tokenDelegatorAddr = factory.createProject(
@@ -83,7 +85,7 @@ contract LTokenDelegateTest is Test {
         assertEq(delegator.sponseredName(), "Vitalik Buterin");
     }
 
-    function test_Upgrade() public {
+    function test_upgrade() public {
         LTokenDelegateV2 v2 = new LTokenDelegateV2();
         factory.upProjectImplement(address(tokenDelegator), address(v2));
 
@@ -216,6 +218,52 @@ contract LTokenDelegateTest is Test {
         vm.stopPrank();
     }
 
+    function test_two_users_transfer_share_calculate() public {
+        vm.startPrank(user1);
+        tokenDelegator.mint{value: 10}();
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 0);
+        vm.warp(block.timestamp + 10);
+        tokenDelegator.mint{value: 10}();
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 100);
+        vm.warp(block.timestamp + 10);
+        tokenDelegator.transfer(user2, 15);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 300);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user2), 0);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        vm.warp(block.timestamp + 10);
+        tokenDelegator.redeem(15);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user2), 150);
+        vm.stopPrank();
+
+        vm.startPrank(user1);
+        vm.warp(block.timestamp + 100);
+        tokenDelegator.redeem(5);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 850);
+        vm.stopPrank();
+    }
+
+    function test_giveback() public {
+        vm.prank(user1);
+        tokenDelegator.mint{value: 10}();
+
+        vm.prank(user2);
+        tokenDelegator.mint{value: 20}();
+
+        vm.warp(block.timestamp + 100);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 0);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user2), 0);
+
+        vm.prank(sponsorAddr);
+        uint totalGivebackAmount = tokenDelegator.giveback{value: 1 ether}();
+        console.log("Total Give back amount:", totalGivebackAmount);
+        console.log("Sponsored ETH amount:", sponsorAddr.balance);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user1), 1000);
+        assertEq(tokenDelegator.sponsorAccumulationShare(user2), 2000);
+        summaryClaimGiveUp("Sponsored give 1 eth back");
+    }
+
     function summary(string memory description) public view {
         console.log(description);
         console.log("User1 ETH balance:", user1.balance);
@@ -264,6 +312,19 @@ contract LTokenDelegateTest is Test {
         console.log(
             "User2 share accumulation:",
             tokenDelegator.sponsorAccumulationShare(user2)
+        );
+    }
+
+    function summaryClaimGiveUp(string memory description) public view {
+        console.log(description);
+
+        console.log(
+            "User1 share accumulation:",
+            tokenDelegator.waitForGiverClaimAmount(user1)
+        );
+        console.log(
+            "User2 share accumulation:",
+            tokenDelegator.waitForGiverClaimAmount(user2)
         );
     }
 }

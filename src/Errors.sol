@@ -20,4 +20,8 @@ library Errors {
     string public constant ZERO_AAVE_SUPPLY = "16"; // No one sponsor this project right now
     string public constant NO_INTEREST = "17"; // Interest has not accrued.
     string public constant REDEEM_ZERO_AMOUNT = "18"; // User redeem 0 LToken
+    string public constant GIVEBACK_ZERO_AMOUNT = "19"; // Sponsor give back 0 ETH amount
+    string public constant ZERO_SPONSOR_NUMBER = "20"; // No one sponsor this project yet
+    string public constant ZERO_TOTAL_SHARE = "21"; // sponsors of this project do not accumulate any share
+    string public constant SEND_ETH_BACK_TO_SPONSORED_FAIL = "22"; // Send the giveback of ETH to sponsored failed
 }

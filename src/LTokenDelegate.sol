@@ -147,12 +147,37 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         return true;
     }
 
-    function giveback(uint amount) external view returns (uint) {
-        {
-            // Silent compiler
-            amount;
+    function giveback() external payable returns (uint) {
+        uint amount = msg.value;
+        require(amount > 0, Errors.GIVEBACK_ZERO_AMOUNT);
+        require(sponsors.length > 0, Errors.ZERO_SPONSOR_NUMBER);
+
+        for (uint i = 0; i < sponsors.length; i++) {
+            _updateSponsorShare(sponsors[i]);
         }
-        console.log("give back");
+
+        uint totalShare = 0;
+        for (uint i = 0; i < sponsors.length; i++) {
+            totalShare += sponsorAccumulationShare[sponsors[i]];
+        }
+
+        require(totalShare > 0, Errors.ZERO_TOTAL_SHARE);
+        uint givebackTotal = 0;
+        for (uint i = 0; i < sponsors.length; i++) {
+            uint receiveGiveback = (amount *
+                sponsorAccumulationShare[sponsors[i]]) / totalShare;
+            waitForGiverClaimAmount[sponsors[i]] += receiveGiveback;
+            givebackTotal += receiveGiveback;
+        }
+
+        uint delta = amount - givebackTotal;
+        if (delta > 0) {
+            (bool success, ) = address(msg.sender).call{value: delta}("");
+            require(success, Errors.SEND_ETH_BACK_TO_SPONSORED_FAIL);
+        }
+
+        totalGiveBackAmount += givebackTotal;
+
         return 0;
     }
 

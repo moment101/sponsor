@@ -52,7 +52,7 @@ interface LTokenInterface {
      * @notice Sponsored can give money back to sponsor
      * @dev Calculate the share of sponsor
      */
-    function giveback(uint amount) external returns (uint);
+    function giveback() external payable returns (uint);
 
     /**
      * @notice Sponsored can claim the interest by AAve

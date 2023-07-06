@@ -109,9 +109,9 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
         return abi.decode(data, (uint256));
     }
 
-    function giveback(uint amount) external returns (uint) {
+    function giveback() external payable returns (uint) {
         bytes memory data = delegateToImplementation(
-            abi.encodeWithSignature("giveback(uint256)", amount)
+            abi.encodeWithSignature("giveback()")
         );
         return abi.decode(data, (uint256));
     }
