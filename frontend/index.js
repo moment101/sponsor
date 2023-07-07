@@ -7,10 +7,10 @@ import {
 } from "./constants.js";
 
 const connectButton = document.getElementById("connectButton");
-const queryButton = document.getElementById("queryListButton");
+// const queryButton = document.getElementById("queryListButton");
 
 connectButton.onclick = connect;
-queryButton.onclick = queryProjectList;
+// queryButton.onclick = queryProjectList;
 
 async function connect() {
   if (typeof window.ethereum !== "undefined") {
