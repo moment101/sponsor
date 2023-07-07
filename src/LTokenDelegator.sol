@@ -34,6 +34,17 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
         implementation = newImplementation;
     }
 
+    function updateProjectConfig(
+        address wethAddr,
+        address aavePoolAddr,
+        address aWETHAddr
+    ) external {
+        if (msg.sender != admin) revert();
+        WETHADDR = wethAddr;
+        WETHPOOLADDR = aavePoolAddr;
+        AWETHADDR = aWETHAddr;
+    }
+
     function decimals() public pure returns (uint8) {
         return 18;
     }

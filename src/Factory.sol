@@ -48,6 +48,10 @@ contract Factory {
         return address(delegator);
     }
 
+    function projectNumber() external view returns (uint) {
+        return allProjects.length;
+    }
+
     function isProjectOpen(address addr_) external view returns (bool) {
         return projectStatus[addr_];
     }
@@ -66,6 +70,18 @@ contract Factory {
         console.log("factory upgrade");
         LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
         delegator.upgrade(newImplement);
+    }
+
+    function updateProjectConfig(
+        address delegatorAddr,
+        address wethAddr,
+        address aavePoolAddr,
+        address aWETHAddr
+    ) external {
+        require(msg.sender == admin, Errors.UPGRADE_IMPLEMENT_NOT_ADMIN);
+        console.log("factory upgrade");
+        LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
+        delegator.updateProjectConfig(wethAddr, aavePoolAddr, aWETHAddr);
     }
 
     function withdrawAllSupply(address delegatorAddr) external {

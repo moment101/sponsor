@@ -64,20 +64,17 @@ contract LTokenStorage is ERC20Storage {
     /**
      * @notice the address of WETH
      */
-    address public constant WETHADDR =
-        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public WETHADDR = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     /**
-     * @notice the address of WETH POOL over AVVe landing platform
+     * @notice the address of WETH POOL over AAVe landing platform
      */
-    address public constant WETHPOOLADDR =
-        0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
+    address public WETHPOOLADDR = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
 
     /**
      * @notice the address of aWETH token over AVVe landing platform
      */
-    address public constant AWETHADDR =
-        0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
+    address public AWETHADDR = 0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8;
 
     /**
      * @notice the block index for calculate sponsor share
