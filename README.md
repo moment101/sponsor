@@ -1,28 +1,53 @@
-# Description
+Sponsor Protocol
+=================
 
-** 保本的贊助專案 **
+## Description
 
-贊助方可以自由選擇要贊助的人/團體/專案，投入 ETH 後可以換得 LToken，之後可 1:1 換回 ETH，
-專案利用這些資金去投資，將賺來的利息轉給被贊助者。
+Many potential people or projects are not easy to raise funds or sponsors in the early stage. Without financial assistance, it is relatively difficult for these projects or people with potential in a certain field to develop. This contract is mainly to provide people with "guaranteed capital" to sponsor these projects, and to earn interest income by providing liquidity on the lending platform AAVe, which will be used to sponsor projects.
 
-# Framework
+The sponsor can get back the principal at any time, and the sponsored person can give back to the previous or current sponsor in the future. The proportion of the reward is based on amount * timestamp. The more the sponsorship amount and the longer the time, the more reward you will get.
 
-1.  Factory 部署建立新的贊助專案合約，任何人都可以上架，需要提供被贊助者的一些資訊(address, url...),
-    加入的專案在這份合約中可以查詢，與管理，方便前端串接
-2.  LToken Proxy / LToken Implementation， 贊助者的互動合約，可以在這裡 Mint / Redeem，
-    負責將資金拿去做投資與贖回，將收益轉給被贊助者。
+## Framework
 
-                       -------------------------------
-                       | LToken1  <=> LTokenDelegate   |
-         Factory ----> | LToken2 <=> LTokenDelegate    |
-                       | ....... ....                  |
-                       |-------------------------------|
-                       |         Supply & Withdraw     |  <=============> AAVE (aWETH)
+<dl>
+  <dt>Factory</dt>
+  <dd>Deploy and create a new sponsorship project contract, anyone can put it on the shelf, you need to provide some information of the sponsored person (address, url...),
+     The added projects can be queried and managed in this contract, which is convenient for front-end connection.</dd>
+  <dt>LToken Proxy / LToken Implementation</dt>
+  <dd>Engagement contracts for sponsors, available here Mint / Redeem,
+     Responsible for investing and redeeming the funds, and transferring the proceeds to the sponsored person.</dd>
+</dl>
 
-3.  專案的被贊助者，之後可以回饋贊助過他的人，金額的分配則按照 金額 \* block Numer，來決定能收到的回饋金額
+![plot](./plot.png)
 
-# Development
+## Development
 
-# Testing
+<dl>
 
-# Usage
+<dt>Step 1.</dt>
+<dd>Modify .env.example file, and change file name to .env</dd>
+
+<dt>Step 2.</dt>
+<dd>Deploy contracts on Anvil (locally)</dd>
+
+```bash
+anvil
+make deploy-anvil
+```
+
+<dt>Step 3.</dt>
+<dd>Deploy contracts on Sepolia testnet</dd>
+
+```bash
+make deploy-sepolia
+```
+</dl>
+
+## Testing
+
+```bash
+forge test -vvv
+```
+
+
+## Usage
