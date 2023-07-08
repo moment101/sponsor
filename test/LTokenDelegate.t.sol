@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import {Factory} from "../src/Factory.sol";
+import {Factory, Project} from "../src/Factory.sol";
 import {LTokenDelegate} from "../src/LTokenDelegate.sol";
 import {LTokenDelegateV2} from "../src/LTokenDelegateV2.sol";
 import {LTokenDelegator} from "../src/LTokenDelegator.sol";
@@ -66,6 +66,12 @@ contract LTokenDelegateTest is Test {
         assertEq(tokenDelegator.sponsoredAddr(), sponsorAddr);
         assertEq(tokenDelegator.sponseredName(), "Jon Smith");
         assertEq(tokenDelegator.sponseredURI(), "https://www.js.org");
+        assertEq(tokenDelegator.decimals(), 18);
+
+        bytes memory data = tokenDelegator.delegateToViewImplementation(
+            abi.encodeWithSignature("decimals()")
+        );
+        assertEq(abi.decode(data, (uint8)), 18);
     }
 
     function test_createAnotherProject() public {
@@ -83,6 +89,11 @@ contract LTokenDelegateTest is Test {
         );
         assertEq(factory.isProjectOpen(tokenDelegatorAddr), true);
         assertEq(delegator.sponseredName(), "Vitalik Buterin");
+        assertEq(factory.projectNumber(), 2);
+
+        Project[] memory ps = factory.summaryAllProjects();
+        assertEq(ps[0].sponsoredName, "Jon Smith");
+        assertEq(ps[1].sponsoredName, "Vitalik Buterin");
     }
 
     function test_upgrade() public {
@@ -109,11 +120,29 @@ contract LTokenDelegateTest is Test {
         emit ProjectStatusChanged(address(tokenDelegator), false);
         factory.setProjectStatus(address(tokenDelegator), false);
         assertEq(factory.isProjectOpen(address(tokenDelegator)), false);
+
+        factory.updateProjectConfig(
+            address(tokenDelegator),
+            address(0x2),
+            address(0x3),
+            address(0x4)
+        );
+        assertEq(tokenDelegator.WETHADDR(), address(0x2));
     }
 
-    function testFail_NonAdminModifyProject() public {
-        vm.prank(user1);
+    function test_NonAdminModifyProject() public {
+        vm.startPrank(user1);
+        vm.expectRevert(bytes("13"));
         factory.setProjectStatus(address(tokenDelegator), false);
+
+        vm.expectRevert(bytes("23"));
+        factory.updateProjectConfig(
+            address(0x1),
+            address(0x2),
+            address(0x3),
+            address(0x4)
+        );
+        vm.stopPrank();
     }
 
     function test_mint_redeem() public {
@@ -121,6 +150,7 @@ contract LTokenDelegateTest is Test {
         summary("Before mint");
         tokenDelegator.mint{value: 10 ether}();
         assertEq(tokenDelegator.balanceOf(user1), 10 ether);
+        assertEq(tokenDelegator.supplyBalance(), 10 ether);
         summary("After mint");
 
         vm.warp(block.timestamp + 60 * 60 * 24 * 365);
@@ -146,12 +176,14 @@ contract LTokenDelegateTest is Test {
         tokenDelegator.mint{value: 5 ether}();
         tokenDelegator.approve(user2, 2 ether);
         assertEq(tokenDelegator.allowance(user1, user2), 2 ether);
+        assertEq(tokenDelegator.supplyBalance(), 5 ether);
         vm.stopPrank();
 
         vm.startPrank(user2);
         tokenDelegator.transferFrom(user1, user2, 2 ether);
         assertEq(tokenDelegator.allowance(user1, user2), 0);
         assertEq(tokenDelegator.balanceOf(user2), 2 ether);
+        assertEq(tokenDelegator.supplyBalance(), 5 ether);
         vm.stopPrank();
     }
 
@@ -259,9 +291,22 @@ contract LTokenDelegateTest is Test {
         uint totalGivebackAmount = tokenDelegator.giveback{value: 1 ether}();
         console.log("Total Give back amount:", totalGivebackAmount);
         console.log("Sponsored ETH amount:", sponsorAddr.balance);
+        console.log(
+            "User 1 wait for claim reward:",
+            tokenDelegator.waitForGiverClaimAmount(user1)
+        );
         assertEq(tokenDelegator.sponsorAccumulationShare(user1), 1000);
         assertEq(tokenDelegator.sponsorAccumulationShare(user2), 2000);
         summaryClaimGiveUp("Sponsored give 1 eth back");
+
+        vm.prank(user1);
+        tokenDelegator.sponsorClaimWaitGiveBackAmount();
+
+        assertEq(tokenDelegator.waitForGiverClaimAmount(user1), 0);
+        assertEq(
+            tokenDelegator.waitForGiverClaimAmount(user2),
+            666666666666666666
+        );
     }
 
     function summary(string memory description) public view {

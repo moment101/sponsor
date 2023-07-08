@@ -24,4 +24,7 @@ library Errors {
     string public constant ZERO_SPONSOR_NUMBER = "20"; // No one sponsor this project yet
     string public constant ZERO_TOTAL_SHARE = "21"; // sponsors of this project do not accumulate any share
     string public constant SEND_ETH_BACK_TO_SPONSORED_FAIL = "22"; // Send the giveback of ETH to sponsored failed
+    string public constant SET_CONFIG_NOT_ADMIN = "23"; // Only admin can update project WETH, AAVe, aToken's addresses
+    string public constant REWARD_AMOUNT_IS_ZERO = "24"; // The waiting reward amount of sponsor is zero
+    string public constant SEND_REWARD_BACK_TO_SPONSOR_FAIL = "25"; // Send reward (from Sponsored giveback) ETH to sponsor failed
 }

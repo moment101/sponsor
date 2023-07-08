@@ -30,7 +30,7 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
 
     function upgrade(address newImplementation) external {
         if (msg.sender != admin) revert();
-        console.log("delegator upgrade");
+        emit ProjectImplementChanged(implementation, newImplementation);
         implementation = newImplementation;
     }
 
@@ -43,16 +43,21 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
         WETHADDR = wethAddr;
         WETHPOOLADDR = aavePoolAddr;
         AWETHADDR = aWETHAddr;
+        emit ProjectConfigChanged(wethAddr, aavePoolAddr, aWETHAddr);
     }
 
-    function decimals() public pure returns (uint8) {
-        return 18;
+    function decimals() public view returns (uint8) {
+        bytes memory data = delegateToViewImplementation(
+            abi.encodeWithSignature("decimals()")
+        );
+        return abi.decode(data, (uint8));
     }
-
-    receive() external payable {}
 
     function balanceOf(address account) external view returns (uint256) {
-        return _balances[account];
+        bytes memory data = delegateToViewImplementation(
+            abi.encodeWithSignature("balanceOf(address)", account)
+        );
+        return abi.decode(data, (uint256));
     }
 
     function transfer(address to, uint256 amount) external returns (bool) {
@@ -141,6 +146,17 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
         return abi.decode(data, (bool));
     }
 
+    function getSponsorCount() public view returns (uint256) {
+        return sponsors.length;
+    }
+
+    function sponsorClaimWaitGiveBackAmount() external returns (uint) {
+        bytes memory data = delegateToImplementation(
+            abi.encodeWithSignature("sponsorClaimWaitGiveBackAmount()")
+        );
+        return abi.decode(data, (uint));
+    }
+
     /**
      * @notice Internal method to delegate execution to another contract
      * @dev It returns to the external caller whatever the implementation returns or forwards reverts
@@ -218,4 +234,6 @@ contract LTokenDelegator is LTokenStorage, LTokenInterface {
             }
         }
     }
+
+    receive() external payable {}
 }

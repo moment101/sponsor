@@ -4,11 +4,6 @@ pragma solidity ^0.8.13;
 import "./LTokenStorage.sol";
 
 interface LTokenInterface {
-    /**
-     * @notice Called by the sponsored or else, they wanna give back to those mintor
-     * @dev Should increase mintor's profit balance
-     */
-
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(
         address indexed owner,
@@ -16,7 +11,24 @@ interface LTokenInterface {
         uint256 value
     );
 
-    // User interface
+    event ProjectImplementChanged(address oldImplement, address newImplement);
+    event ProjectConfigChanged(
+        address underlyingAddr,
+        address poolAddr,
+        address aTokenAddr
+    );
+    event Mint(address indexed from, uint256 indexed amount);
+    event Redeem(address indexed from, uint256 indexed amount);
+    event GiveBack(address indexed from, uint256 indexed amount);
+    event SponsoredClaimInterest(
+        address indexed from,
+        uint256 indexed interestAmount
+    );
+    event SponsorClaimReward(
+        address indexed from,
+        uint256 indexed rewardAmount
+    );
+    event AdminWithdrawAllSupplyOfAAVeBackToPool(address admin, uint256 amount);
 
     function balanceOf(address account) external view returns (uint256);
 
@@ -41,22 +53,9 @@ interface LTokenInterface {
 
     function supplyBalance() external returns (uint256);
 
-    /**
-     * @notice Admin can withdraw all supply of AAVe back to pool (emergency situations)
-     * @dev Need implement send all ETH back to sponsor
-     */
-
     function withdrawAllFundBack() external returns (bool);
 
-    /**
-     * @notice Sponsored can give money back to sponsor
-     * @dev Calculate the share of sponsor
-     */
     function giveback() external payable returns (uint);
 
-    /**
-     * @notice Sponsored can claim the interest by AAve
-     * @dev withdraw aToken = supplyBalance - totalSupply
-     */
     function claimInterest() external returns (uint);
 }

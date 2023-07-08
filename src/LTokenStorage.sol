@@ -43,11 +43,6 @@ contract LTokenStorage is ERC20Storage {
     uint256 public totalSponsorshipAmount;
 
     /**
-     * @notice the amount of interest not yet transfer to sponsored
-     */
-    uint256 public waitForSponsoredAmount;
-
-    /**
      * @notice the total give back amount from sponsored
      */
     uint256 public totalGiveBackAmount;
@@ -56,10 +51,6 @@ contract LTokenStorage is ERC20Storage {
      * @notice the amount of give back from sponsored, wait for giver to claim
      */
     mapping(address => uint256) public waitForGiverClaimAmount;
-
-    // Investment
-
-    uint256 public reservedPercent = 2e17;
 
     /**
      * @notice the address of WETH

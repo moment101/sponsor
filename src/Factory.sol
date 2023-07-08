@@ -6,13 +6,21 @@ import {Errors} from "./Errors.sol";
 import {LTokenDelegate} from "./LTokenDelegate.sol";
 import {LTokenDelegator} from "./LTokenDelegator.sol";
 
+struct Project {
+    string sponsoredName;
+    address delegatorAddr;
+    uint96 sponsorCount;
+    uint128 totalSupplyAmount;
+    uint128 totalGivebackAmount;
+}
+
 /**
  * @title Sponsor's Factory Contract
  * @notice Concrete Factory for LTokens
  * @author Jon
  */
 contract Factory {
-    address public admin;
+    address public immutable admin;
     address[] public allProjects;
     mapping(address => bool) public projectStatus;
 
@@ -67,7 +75,6 @@ contract Factory {
         address newImplement
     ) external {
         require(msg.sender == admin, Errors.UPGRADE_IMPLEMENT_NOT_ADMIN);
-        console.log("factory upgrade");
         LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
         delegator.upgrade(newImplement);
     }
@@ -78,8 +85,7 @@ contract Factory {
         address aavePoolAddr,
         address aWETHAddr
     ) external {
-        require(msg.sender == admin, Errors.UPGRADE_IMPLEMENT_NOT_ADMIN);
-        console.log("factory upgrade");
+        require(msg.sender == admin, Errors.SET_CONFIG_NOT_ADMIN);
         LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
         delegator.updateProjectConfig(wethAddr, aavePoolAddr, aWETHAddr);
     }
@@ -88,5 +94,23 @@ contract Factory {
         require(msg.sender == admin, Errors.CALLER_NOT_ADMIN);
         LTokenDelegator delegator = LTokenDelegator(payable(delegatorAddr));
         delegator.withdrawAllFundBack();
+    }
+
+    function summaryAllProjects() external view returns (Project[] memory) {
+        Project[] memory projects = new Project[](allProjects.length);
+        for (uint i = 0; i < allProjects.length; i++) {
+            LTokenDelegator delegator = LTokenDelegator(
+                payable(allProjects[i])
+            );
+
+            projects[i] = Project({
+                sponsoredName: delegator.sponseredName(),
+                delegatorAddr: allProjects[i],
+                sponsorCount: uint96(delegator.getSponsorCount()),
+                totalSupplyAmount: uint128(delegator.totalSupply()),
+                totalGivebackAmount: uint128(delegator.totalGiveBackAmount())
+            });
+        }
+        return projects;
     }
 }

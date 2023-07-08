@@ -28,6 +28,10 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         return _balances[account];
     }
 
+    function decimals() public pure returns (uint8) {
+        return 18;
+    }
+
     function _transfer(address from, address to, uint256 amount) internal {
         require(from != address(0), Errors.TRANSFER_FROM_ZERO_ADDRESS);
         require(to != address(0), Errors.TRANSFER_TO_ZERO_ADDRESS);
@@ -94,14 +98,28 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         return true;
     }
 
+    /**
+     * @notice Sponsor send ether to mint LToken, contract supply these to AAVe landing platform
+     * @dev Now only WETH sponsorship and serial loans are provided, and more options can be provided in the future
+     * @return The return value is the increased liquidity this time
+     */
+
     function mint() external payable returns (uint256) {
         require(msg.value > 0, Errors.MINT_ZERO_AMOUNT);
         _updateSponsorShare(msg.sender);
         _balances[msg.sender] += msg.value;
         totalSupply += msg.value;
         require(_supply(msg.value), Errors.SUPPLY_TO_AVVE_FAIL);
+        emit Mint(msg.sender, msg.value);
         return msg.value;
     }
+
+    /**
+     * @notice Sponsor redeem their LToken back to ETH
+     * @dev Need to withdraw aToken from AAVe first, then send ETH back to sponsor
+     * @param amount need to redeem
+     * @return The return value is the decreased liquidity this time
+     */
 
     function redeem(uint256 amount) external returns (uint256) {
         require(amount > 0, Errors.REDEEM_ZERO_AMOUNT);
@@ -112,16 +130,41 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         require(_withdraw(amount), Errors.WITHDRAW_FROM_AVVE_FAIL);
         (bool success, ) = address(msg.sender).call{value: amount}("");
         require(success, Errors.SEND_ETH_BACK_TO_USER_FAIL);
+        emit Redeem(msg.sender, amount);
         return amount;
     }
+
+    /**
+     * @notice Admin can withdraw all supply of AAVe back to sponsors (emergency situations)
+     * @dev Send ether to sponsors cost huge gas, maybe added to waitForClaim mapping is better
+     * @return Result of this emergency operations
+     */
 
     function withdrawAllFundBack() external returns (bool) {
         require(msg.sender == admin, Errors.CALLER_NOT_ADMIN);
         uint256 supplyAmount = supplyBalance();
         IPool(WETHPOOLADDR).withdraw(WETHADDR, supplyAmount, address(this));
+        IWETH wETH = IWETH(WETHADDR);
+        wETH.withdraw(supplyAmount);
+
+        for (uint i = 0; i < sponsors.length; i++) {
+            address sponsor = sponsors[i];
+            uint256 amount = _balances[sponsor];
+            _balances[sponsor] = 0;
+            totalSupply -= amount;
+            (bool success, ) = address(sponsor).call{value: amount}("");
+            require(success, Errors.SEND_ETH_BACK_TO_USER_FAIL);
+        }
+
+        emit AdminWithdrawAllSupplyOfAAVeBackToPool(admin, supplyAmount);
         return true;
     }
 
+    /**
+     * @notice Sponsor mint Ltoken, contract add weth to AAve aWETH pool
+     * @param amount to add supply of AAVe aWETH Pool
+     * @return Result of this supply operation
+     */
     function _supply(uint256 amount) private returns (bool) {
         IWETH wETH = IWETH(WETHADDR);
         IPool wethPool = IPool(WETHPOOLADDR);
@@ -136,10 +179,11 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         return true;
     }
 
-    function supplyBalance() public view returns (uint256) {
-        return IERC20(AWETHADDR).balanceOf(address(this));
-    }
-
+    /**
+     * @notice Sponsor redeem Ltoken, contract need to withdraw WETH from AAve aWETH pool
+     * @param amount to withdraw from AAVe aWETH Pool
+     * @return Result of this withdraw operation
+     */
     function _withdraw(uint amount) private returns (bool) {
         IPool(WETHPOOLADDR).withdraw(WETHADDR, amount, address(this));
         IWETH wETH = IWETH(WETHADDR);
@@ -147,6 +191,19 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         return true;
     }
 
+    /**
+     * @notice Query the total supply of this contract on AAVe aWETH pool
+     * @return Supply amount on AAVe WETH Pool
+     */
+    function supplyBalance() public view returns (uint256) {
+        return IERC20(AWETHADDR).balanceOf(address(this));
+    }
+
+    /**
+     * @notice Anyone can contribute back to the sponsors who supported this project
+     * @dev Update all of the sponsors's share status, keep ether in contract, wait for them to claim
+     * @return The returned is this time give back total amount, Some amounts may not be divided equally
+     */
     function giveback() external payable returns (uint) {
         uint amount = msg.value;
         require(amount > 0, Errors.GIVEBACK_ZERO_AMOUNT);
@@ -177,9 +234,30 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         }
 
         totalGiveBackAmount += givebackTotal;
-
-        return 0;
+        emit GiveBack(msg.sender, givebackTotal);
+        return givebackTotal;
     }
+
+    /**
+     * @notice Sponsor claim the reward from Sponsored
+     * @dev Calculate the interest should great than gas fee (TODO)
+     * @return The returned amount is interest so far
+     */
+    function sponsorClaimWaitGiveBackAmount() external returns (uint) {
+        uint rewardAmount = waitForGiverClaimAmount[msg.sender];
+        require(rewardAmount > 0, Errors.REWARD_AMOUNT_IS_ZERO);
+        waitForGiverClaimAmount[msg.sender] = 0;
+        (bool success, ) = address(msg.sender).call{value: rewardAmount}("");
+        require(success, Errors.SEND_REWARD_BACK_TO_SPONSOR_FAIL);
+        emit SponsorClaimReward(msg.sender, rewardAmount);
+        return rewardAmount;
+    }
+
+    /**
+     * @notice Sponsored claim back the interest accrued from AAVe
+     * @dev Calculate the interest should great than gas fee (TODO)
+     * @return The returned amount is interest so far
+     */
 
     function claimInterest() external returns (uint) {
         require(msg.sender == sponsoredAddr, Errors.CALLER_NOT_SPONSORED);
@@ -188,10 +266,18 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
         require(interest > 0, Errors.NO_INTEREST);
         require(_withdraw(interest), Errors.WITHDRAW_FROM_AVVE_FAIL);
         (bool success, ) = address(msg.sender).call{value: interest}("");
-        require(success, Errors.SEND_ETH_BACK_TO_USER_FAIL);
+        require(success, Errors.SEND_ETH_BACK_TO_SPONSORED_FAIL);
         totalSponsorshipAmount += interest;
+        emit SponsoredClaimInterest(msg.sender, interest);
         return interest;
     }
+
+    /**
+     * @notice Update the sponsor share status when mint/redeem/transfer,
+     * Each sponsor's share affects the amount of rewards that can be obtained later
+     * @dev At present, the time is multiplied by the amount, there may be deviations, and the weight needs to be adjusted later
+     * @param sponsor the address
+     */
 
     function _updateSponsorShare(address sponsor) internal {
         uint previousBlockIndex = sponsorCurrentBlockIndex[sponsor];
@@ -208,8 +294,4 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
             }
         }
     }
-
-    receive() external payable {}
-
-    fallback() external payable {}
 }
