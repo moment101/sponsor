@@ -294,4 +294,8 @@ contract LTokenDelegate is LTokenStorage, LTokenInterface {
             }
         }
     }
+
+    receive() external payable {}
+
+    fallback() external payable {}
 }

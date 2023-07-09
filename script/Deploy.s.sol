@@ -16,19 +16,27 @@ contract OnAnvilScript is Script {
         Factory factory = new Factory();
 
         factory.createProject(
-            "JonSmith Token",
-            "JST",
-            address(0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f),
-            "Jon Smith",
-            "https://www.js.org"
+            "Jack JIE Token",
+            "JJT",
+            address(0xb16DE2a898B91CcFe556238ee6Ba534EeE2438c7),
+            "Jack JIE",
+            "https://www.highstreet.market/"
         );
 
         factory.createProject(
-            "Vitalik Buterin Token",
-            "VBT",
-            address(0x220866B1A2219f40e72f5c628B65D54268cA3A9D),
-            "Vitalik Buterin",
-            "https://twitter.com/VitalikButerin"
+            "BoYu Chen Token",
+            "BCT",
+            address(0xb16DE2a898B91CcFe556238ee6Ba534EeE2438c7),
+            "BoYu Chen",
+            "https://perp.com/"
+        );
+
+        factory.createProject(
+            "Bill HSIU Token",
+            "BHT",
+            address(0xb16DE2a898B91CcFe556238ee6Ba534EeE2438c7),
+            "Bill HSIU",
+            "https://www.ambergroup.io"
         );
 
         vm.stopBroadcast();
@@ -52,22 +60,31 @@ contract OnSepoliaScript is Script {
         Factory factory = new Factory();
 
         address pool1 = factory.createProject(
-            "JonSmith Token",
-            "JST",
+            "Jack JIE Token",
+            "JJT",
             address(0xb16DE2a898B91CcFe556238ee6Ba534EeE2438c7),
-            "Jon Smith",
-            "https://www.js.org"
+            "Jack JIE",
+            "https://www.highstreet.market/"
         );
         factory.updateProjectConfig(pool1, WETHADDR, WETHPOOLADDR, AWETHADDR);
 
         address pool2 = factory.createProject(
-            "Vitalik Buterin Token",
-            "VBT",
+            "BoYu Chen Token",
+            "BCT",
             address(0xb16DE2a898B91CcFe556238ee6Ba534EeE2438c7),
-            "Vitalik Buterin",
-            "https://twitter.com/VitalikButerin"
+            "BoYu Chen",
+            "https://perp.com/"
         );
         factory.updateProjectConfig(pool2, WETHADDR, WETHPOOLADDR, AWETHADDR);
+
+        address pool3 = factory.createProject(
+            "Bill HSIU Token",
+            "BHT",
+            address(0xb16DE2a898B91CcFe556238ee6Ba534EeE2438c7),
+            "Bill HSIU",
+            "https://www.ambergroup.io"
+        );
+        factory.updateProjectConfig(pool3, WETHADDR, WETHPOOLADDR, AWETHADDR);
 
         vm.stopBroadcast();
     }

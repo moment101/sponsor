@@ -34,6 +34,9 @@ The sponsor can get back the principal at any time, and the sponsored person can
 anvil
 make deploy-anvil
 ```
+Check "./frontend/constants.js" file, factoryAddress is the factory's address on Anvil
+Open "./frontand/index.html with Live Server, interact with browser install Metamask
+Add anvil local testnet to Metamask
 
 <dt>Step 3.</dt>
 <dd>Deploy contracts on Sepolia testnet</dd>
