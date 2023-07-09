@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Project</title>
+    <link rel="stylesheet" href="pool.css">
+  </head>
+
+  <body>
+    <div style="background-color:#000000;margin:0 auto;">
+        <div style="background-color:#000000;width:800px;height:1000px;margin:0 auto;">
+          <button id="connectButton" style="float: right;">Connect</button>
+            <h1 id="projectName">Project</h1>
+            <h3 id="tokenSymbol">Symbal</h3>
+
+            <table id="informTable">
+              <tr>
+                <td  style="width: 150px;">Sponsored Name</td>
+                <td id="sponsoredName" style="width: 400px;">Sponsored Name</td>
+              </tr>
+              <tr>
+                <td  style="width: 150px;">Sponsored Address</td>
+                <td id="sponsoredAddress" style="width: 400px;">Sponsored Name</td>
+              </tr>
+              <tr>
+                <td  style="width: 150px;">Sponsored URL</td>
+                <td id="sponsoredURL" style="width: 400px;">Sponsored URL</td>
+              </tr>
+              <tr>
+                <td  style="width: 150px;">Amount I have sponsored: </td>
+                <td id="sponsorAmount" style="width: 400px;">0000</td>
+              </tr>
+              <tr>
+                <td  style="width: 150px;">Reward Share Accumulation I have: </td>
+                <td id="rewardShareAmount" style="width: 400px;">0000</td>
+              </tr>
+              <tr>
+                <td  style="width: 150px;">Pool Total Supply Amount</td>
+                <td id="poolTotalSupplyAmount" style="width: 400px;">0000</td>
+              </tr>
+              <tr>
+                <td  style="width: 150px;">AAVe Total Supply Amount</td>
+                <td id="aAVeTotalSupplyAmount" style="width: 400px;">0000</td>
+              </tr>
+            </table>
+
+            <h4>Sponsor Action:</h4>
+            <table id="userActionTable">
+              <tr>
+                <td>Mint</td>
+                <td><input id="mintAmount" placeholder="1" /></td>
+                <td>ETH</td>
+                <td colspan="2"><button type="button" id="mintButton" class="action"> Mint </button></td>
+              </tr>
+              <tr>
+                <td>Redeem</td>
+                <td><input id="redeemAmount" placeholder="1" /></td>
+                <td>ETH</td>
+                <td colspan="2"><button type="button" id="redeemButton" class="action"> Redeem </button></td>
+              </tr>
+              <tr>
+                <td>Transfer</td>
+                <td><input id="transferAmount" placeholder="1" /></td>
+                <td>ETH to:</td>
+                <td><input id="transferTo" placeholder="0xcafe" /></td>
+                <td><button type="button" id="transferButton" class="action"> Transfer </button></td>
+              </tr>
+              <tr>
+                <td>Approve</td>
+                <td><input id="approveAmount" placeholder="1" /></td>
+                <td>ETH to:</td>
+                <td><input id="approveTo" placeholder="0xcafe" /></td>
+                <td><button type="button" id="approveButton" class="action"> Approve </button></td>
+              </tr>
+
+              <tr>
+                <td>Reward Accumulation Amount</td>
+                <td id="rewardGiveBackAmount">0000</td>
+                <td>ETH</td>
+                <td colspan="2"><button type="button" id="rewardGiveBackClaimButton" class="action"> Claim </button></td>
+              </tr>
+              <tr>
+                <td>Give Back</td>
+                <td><input id="giveBackAmount" placeholder="1" /></td>
+                <td>ETH</td>
+                <td colspan="2"><button type="button" id="giveBackButton" class="action"> Give Back </button></td>
+              </tr>
+            </table>
+            
+            <h4>Sponsored Action:</h4>
+            <table id="sponsoredActionTable">
+              <tr>
+                <td>Accumulation Interest Amount</td>
+                <td id="accumulationInterestAmount">0000</td>
+                <td>ETH</td>
+                <td colspan="2"><button type="button" id="accumulationInterestClaimButton" class="action" style="background-color:#5aa1df;"> Claim </button></td>
+              </tr>
+            </table>
+            <div id="table-container"></div>
+            
+            <!-- <div>
+            <label for="mintAmount">ETH Amount</label>
+            <input id="mintAmount" placeholder="1" />
+            <button type="button" id="mintButton" > Mint </button>
+            </div>
+            <div>
+            <label for="redeemAmount">ETH Amount</label>
+            <input id="redeemAmount" placeholder="1" />
+            <button type="button" id="redeemButton" > Redeem </button>
+            </div> -->
+        </div>
+    </div>
+  </body>
+
+  <script src="./pool.js" type="module"></script>
+</html>

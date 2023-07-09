@@ -1,0 +1,40 @@
+body {
+    background-color: black;
+}
+p{
+    display: inline-block;
+}
+h1, h2, h3, h4, p, label, th, td, a {
+    color: rgb(102, 186, 102);
+}
+table, th, td {
+  border: 1px solid  rgb(102, 186, 102);
+}
+
+table {
+  margin-top: 20px;
+}
+
+a:link {
+  color: green;
+  background-color: transparent;
+  text-decoration: none;
+  }
+
+  a:visited {
+    color: green;
+  background-color: transparent;
+  text-decoration: none;
+  }
+
+  a:hover {
+    color: green;
+  background-color: transparent;
+  text-decoration: underline;
+  }
+
+  a:active {
+    color: green;
+  background-color: transparent;
+  text-decoration: underline;
+  }
